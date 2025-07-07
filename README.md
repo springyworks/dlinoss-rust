@@ -2,6 +2,31 @@
 
 **Damped Linear Oscillatory State-Space Models** - Mathematical implementation following arXiv:2505.12171
 
+![Version](https://img.shields.io/badge/version-0.1.0--alpha-red?style=flat-square)
+![Status](https://img.shields.io/badge/status-experimental-orange?style=flat-square)
+![Stability](https://img.shields.io/badge/stability-alpha-red?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+
+## ⚠️ **ALPHA SOFTWARE WARNING**
+
+🚧 **This is experimental alpha software** 🚧
+
+- **Not production ready** - Use for research and experimentation only
+- **API may change drastically** without notice
+- **Mathematical implementation is research-grade** - needs thorough validation
+- **Performance not optimized** - focus is on correctness, not speed
+- **Limited testing coverage** - mathematical validation exists but incomplete
+- **Documentation may contain errors** - cross-reference with original paper
+
+**Use at your own risk** - This implementation is intended for:
+
+- Research and academic exploration
+- Mathematical validation and experimentation  
+- Learning about D-LinOSS concepts
+- Prototyping and proof-of-concept work
+
+For production use, wait for stable releases or thoroughly validate all components.
+
 ## 🚀 Available Cargo Commands
 
 ### **Understanding `cargo run`**

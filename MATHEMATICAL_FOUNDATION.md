@@ -5,6 +5,27 @@
 Based on arXiv:2505.12171: "Learning to Dissipate Energy in Oscillatory State-Space Models"  
 Authors: Jared Boyer, T. Konstantin Rusch, Daniela Rus
 
+## ⚠️ **EXPERIMENTAL RESEARCH IMPLEMENTATION**
+
+🔬 **This is an experimental research implementation** 🔬
+
+**DISCLAIMER**: This mathematical documentation and implementation are:
+
+- **Research-grade software** - not production-ready
+- **Experimental interpretations** of the D-LinOSS paper
+- **Subject to mathematical errors** - cross-reference with original paper
+- **Incomplete validation** - theoretical correctness not fully verified
+- **Alpha implementation** - APIs and formulations may change
+
+**For authoritative mathematical formulations**, always refer to the original paper: arXiv:2505.12171
+
+**Use responsibly** - This documentation is intended for:
+
+- Academic research and exploration
+- Mathematical concept learning
+- Implementation guidance (with caution)
+- Cross-validation with other implementations
+
 ---
 
 ## 📐 **Core Mathematical Formulation**
