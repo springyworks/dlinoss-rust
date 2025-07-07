@@ -1,0 +1,9 @@
+[package]
+name = "dlinoss-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+burn = { path = "/home/rustuser/projects/from_github/burnko/crates/burn", features = ["webgpu", "train", "vision"] }
+serde = { version = "1.0", features = ["std", "derive"] }
+log = "0.4"
