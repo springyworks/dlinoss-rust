@@ -1,4 +1,6 @@
 use burn::prelude::*;
+use burn::nn::{LayerNorm, LayerNormConfig};
+use crate::{DLinossLayer, DLinossLayerConfig};
 
 /// DLinossBlock: A stack of DLinossLayer(s) with optional skip connections and normalization.
 #[derive(Module, Debug)]

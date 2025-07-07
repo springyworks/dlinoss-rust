@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../LinossRust"
+		},
+		{
+			"path": "../morseRust"
 		}
 	],
 	"settings": {

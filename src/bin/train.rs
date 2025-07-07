@@ -1,6 +1,5 @@
 #![recursion_limit = "131"]
 use burn::{
-    backend::{Autodiff, WebGpu},
     data::dataset::Dataset,
     optim::AdamConfig,
 };
@@ -8,27 +7,33 @@ use dlinoss_rust::{
     inference,
     model::ModelConfig,
     training::{self, TrainingConfig},
+    device::{init_device, Backend, AutodiffBackend},
 };
 
 fn main() {
-    type MyBackend = WebGpu<f32, i32>;
-    type MyAutodiffBackend = Autodiff<MyBackend>;
-
-    // Create a default Wgpu device
-    let device = burn::backend::wgpu::WgpuDevice::default();
+    // Use centralized device initialization
+    let device = init_device();
 
     // All the training artifacts will be saved in this directory
     let artifact_dir = "/tmp/dlinoss";
 
     // Train the model
-    training::train::<MyAutodiffBackend>(
+    training::train::<AutodiffBackend>(
         artifact_dir,
-        TrainingConfig::new(ModelConfig::new(10, 512), AdamConfig::new()),
+        TrainingConfig::new(
+            ModelConfig {
+                num_classes: 10,
+                hidden_size: 64, // Smaller hidden size for D-LinOSS
+                dropout: 0.5,
+                use_dlinoss: true, // Test with D-LinOSS
+            }, 
+            AdamConfig::new()
+        ),
         device.clone(),
     );
 
     // Infer the model
-    inference::infer::<MyBackend>(
+    inference::infer::<Backend>(
         artifact_dir,
         device,
         burn::data::dataset::vision::MnistDataset::test()
