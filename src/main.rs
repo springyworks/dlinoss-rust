@@ -20,7 +20,7 @@ fn main() {
     println!("GPU matrix multiplication completed. Result shape: {:?}", gpu_result.dims());
     
     // Test D-LinOSS layer creation with proper config
-    let dlinoss_config = DLinossLayerConfig::new_dlinoss(32, 32, 32);
+    let dlinoss_config = DLinossLayerConfig::dlinoss_config(32, 32, 32);
     
     let dlinoss_layer: DLinossLayer<Backend> = DLinossLayer::new(&dlinoss_config, &device);
     

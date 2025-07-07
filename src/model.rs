@@ -37,7 +37,7 @@ impl ModelConfig {
 	pub fn init<B: Backend>(&self, device: &B::Device) -> Model<B> {
 		if self.use_dlinoss {
 			// Use D-LinOSS block as head
-			let dlinoss_config = DLinossLayerConfig::new_dlinoss(16 * 8 * 8, self.hidden_size, self.num_classes);
+			let dlinoss_config = DLinossLayerConfig::dlinoss_config(16 * 8 * 8, self.hidden_size, self.num_classes);
 			Model {
 				conv1: Conv2dConfig::new([1, 8], [3, 3]).init(device),
 				conv2: Conv2dConfig::new([8, 16], [3, 3]).init(device),

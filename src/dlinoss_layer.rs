@@ -22,7 +22,7 @@ pub struct DLinossLayerConfig {
 }
 
 impl DLinossLayerConfig {
-    pub fn new_dlinoss(d_input: usize, d_model: usize, d_output: usize) -> Self {
+    pub fn dlinoss_config(d_input: usize, d_model: usize, d_output: usize) -> Self {
         Self {
             d_input,
             d_model,
@@ -36,10 +36,10 @@ impl DLinossLayerConfig {
         }
     }
     
-    pub fn vanilla_linoss(d_input: usize, d_model: usize, d_output: usize) -> Self {
+    pub fn basic_linoss(d_input: usize, d_model: usize, d_output: usize) -> Self {
         Self {
             enable_damping: false,
-            ..Self::new_dlinoss(d_input, d_model, d_output)
+            ..Self::dlinoss_config(d_input, d_model, d_output)
         }
     }
 }
