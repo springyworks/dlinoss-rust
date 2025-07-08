@@ -1,5 +1,5 @@
 use burn::prelude::*;
-use burn::nn::{LayerNorm, LayerNormConfig};
+use burn::nn::LayerNorm;
 use crate::{DLinossLayer, DLinossLayerConfig};
 
 /// DLinossBlock: A stack of DLinossLayer(s) with optional skip connections and normalization.
@@ -15,11 +15,7 @@ impl<B: Backend> DLinossBlock<B> {
         for _ in 0..num_layers {
             layers.push(DLinossLayer::new(config, device));
         }
-        let norm = if config.enable_layer_norm {
-            Some(LayerNormConfig::new(config.d_output).init(device))
-        } else {
-            None
-        };
+        let norm = None; // Layer normalization removed as per paper analysis
         Self { layers, norm }
     }
 

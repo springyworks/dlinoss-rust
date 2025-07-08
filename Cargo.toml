@@ -2,6 +2,7 @@
 name = "dlinoss-rust"
 version = "0.1.0"
 edition = "2024"
+default-run = "train"
 
 [dependencies]
 burn = { path = "/home/rustuser/projects/from_github/burnko/crates/burn", features = ["webgpu", "train", "vision"] }

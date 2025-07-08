@@ -317,3 +317,43 @@ pub fn exponential_decay_benchmark<B: Backend>(
     
     (input_tensor, target_tensor)
 }
+
+// TRAINING SUPPORT for Model1327
+use burn::{
+    train::{ClassificationOutput, TrainOutput, TrainStep, ValidStep},
+    nn::loss::CrossEntropyLossConfig,
+    tensor::backend::AutodiffBackend,
+};
+use crate::data::MnistBatch;
+
+impl<B: Backend> Model1327<B> {
+    /// Forward pass for classification training
+    pub fn forward_classification(
+        &self,
+        images: Tensor<B, 3>,
+        targets: Tensor<B, 1, Int>,
+    ) -> ClassificationOutput<B> {
+        // Add batch dimension for the forward pass
+        let [batch_size, height, width] = images.dims();
+        let images_4d = images.reshape([batch_size, 1, height, width]);
+        let output = self.forward(images_4d);
+        let loss = CrossEntropyLossConfig::new()
+            .init(&output.device())
+            .forward(output.clone(), targets.clone());
+
+        ClassificationOutput::new(loss, output, targets)
+    }
+}
+
+impl<B: AutodiffBackend> TrainStep<MnistBatch<B>, ClassificationOutput<B>> for Model1327<B> {
+    fn step(&self, batch: MnistBatch<B>) -> TrainOutput<ClassificationOutput<B>> {
+        let item = self.forward_classification(batch.images, batch.targets);
+        TrainOutput::new(self, item.loss.backward(), item)
+    }
+}
+
+impl<B: Backend> ValidStep<MnistBatch<B>, ClassificationOutput<B>> for Model1327<B> {
+    fn step(&self, batch: MnistBatch<B>) -> ClassificationOutput<B> {
+        self.forward_classification(batch.images, batch.targets)
+    }
+}

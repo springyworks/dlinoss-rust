@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "../../from_github/damped-linoss"
+		},
+		{
+			"path": "../../from_github/burnko"
 		}
 	],
 	"settings": {

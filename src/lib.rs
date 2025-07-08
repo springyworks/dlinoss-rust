@@ -1,12 +1,15 @@
 //! D-LinOSS: Damped Linear Oscillatory State-Space Layers and Blocks
 
-// Mathematical D-LinOSS implementation following arXiv:2505.12171
-pub mod dlinoss_1327;
-pub mod dlinoss_block_1327;
-pub mod parallel_scan_1327;
-pub mod model_1327;
+// Custom Burn extensions - functionality missing from Burn
+pub mod burnadd;
 
-// Legacy implementations (working baseline)
+// Core mathematical D-LinOSS implementation following arXiv:2505.12171
+pub mod dlinoss_core;
+
+#[cfg(test)]
+pub mod test_dlinoss_core;
+
+// Layer and block implementations using the corrected core
 pub mod dlinoss_layer;
 pub mod dlinoss_block;
 
@@ -21,9 +24,7 @@ pub mod training;
 pub mod architectures;
 pub mod benchmark;
 
-// Re-exports for convenience
-pub use dlinoss_1327::{DLinoss1327, DLinoss1327Config};
-pub use dlinoss_block_1327::{DLinossBlock1327, DLinossBlock1327Config};
-pub use model_1327::{Model1327, ModelConfig};
+// Re-exports for convenience (only working implementations)
+pub use dlinoss_core::*;
 pub use dlinoss_layer::{DLinossLayer, DLinossLayerConfig};
 pub use dlinoss_block::DLinossBlock;
