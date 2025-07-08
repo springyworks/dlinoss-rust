@@ -11,7 +11,9 @@ use burn::{
 	tensor::backend::AutodiffBackend,
 	train::{
 		ClassificationOutput, LearnerBuilder, TrainOutput, TrainStep, ValidStep,
-		metric::{AccuracyMetric, LossMetric},
+		metric::{AccuracyMetric, LossMetric, store::{Aggregate, Direction, Split}},
+		checkpoint::{MetricCheckpointingStrategy},
+		MetricEarlyStoppingStrategy, StoppingCondition,
 	},
 };
 
@@ -88,12 +90,29 @@ pub fn train<B: AutodiffBackend>(artifact_dir: &str, config: TrainingConfig, dev
 		.num_workers(config.num_workers)
 		.build(MnistDataset::test());
 
+	let accuracy_metric: AccuracyMetric<B> = AccuracyMetric::new();
+	
+	let early_stopping = MetricEarlyStoppingStrategy::new(
+		&accuracy_metric,
+		Aggregate::Mean,
+		Direction::Highest,
+		Split::Valid,
+		StoppingCondition::NoImprovementSince { n_epochs: 5 },
+	);
+	
 	let learner = LearnerBuilder::new(artifact_dir)
 		.metric_train_numeric(AccuracyMetric::new())
 		.metric_valid_numeric(AccuracyMetric::new())
 		.metric_train_numeric(LossMetric::new())
 		.metric_valid_numeric(LossMetric::new())
 		.with_file_checkpointer(CompactRecorder::new())
+		.with_checkpointing_strategy(MetricCheckpointingStrategy::new(
+			&accuracy_metric,
+			Aggregate::Mean,
+			Direction::Highest,
+			Split::Valid,
+		))
+		.early_stopping(early_stopping)
 		.devices(vec![device.clone()])
 		.num_epochs(config.num_epochs)
 		.summary()

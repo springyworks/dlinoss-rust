@@ -27,7 +27,7 @@ fn main() {
     // Test forward pass with random input (batch_size, sequence_len, d_input)
     let input = Tensor::random([2, 64, 32], burn::tensor::Distribution::Uniform(-1.0, 1.0), &device);
     println!("D-LinOSS input tensor device: {:?}", input.device());
-    let output = dlinoss_layer.forward(input);
+    let output = dlinoss_layer.forward_3d(input);
     
     println!("D-LinOSS layer forward pass successful!");
     println!("Output shape: {:?}", output.dims());

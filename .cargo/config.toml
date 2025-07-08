@@ -1,0 +1,6 @@
+[build]
+# Suppress warnings from dependencies while keeping warnings in your own code
+rustflags = ["--cap-lints", "warn"]
+
+[target.x86_64-unknown-linux-gnu]
+# Additional target-specific configuration if needed

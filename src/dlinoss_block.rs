@@ -23,7 +23,7 @@ impl<B: Backend> DLinossBlock<B> {
     pub fn forward(&self, input: Tensor<B, 3>) -> Tensor<B, 3> {
         let mut x = input;
         for layer in &self.layers {
-            x = layer.forward(x);
+            x = layer.forward_3d(x);
         }
         if let Some(norm) = &self.norm {
             norm.forward(x)

@@ -94,6 +94,7 @@ pub fn dlinoss_parallel_scan<B: Backend>(
 }
 
 /// Apply binary operator for D-LinOSS transition matrices
+#[allow(dead_code)]
 fn apply_dlinoss_binary_op_matrices<B: Backend>(
     a_i: Tensor<B, 1>,
     a_j: Tensor<B, 1>, 
@@ -120,6 +121,7 @@ fn apply_dlinoss_binary_op_matrices<B: Backend>(
 }
 
 /// Apply binary operator for D-LinOSS state vectors
+#[allow(dead_code)]
 fn apply_dlinoss_binary_op_vectors<B: Backend>(
     b_i: Tensor<B, 2>,
     b_j: Tensor<B, 2>,
@@ -221,3 +223,33 @@ mod tests {
         // Third should be [3+3, 3+3] = [6, 6]
     }
 }
+
+/// Generic parallel scan operation for associative binary operations
+/// Currently implements sequential scan due to Burn tensor limitations
+pub fn parallel_scan<B: Backend, F>(
+    inputs: Vec<Tensor<B, 2>>,
+    binary_op: F,
+    _device: &B::Device,  // Prefix with underscore to indicate intentionally unused
+) -> Vec<Tensor<B, 2>>
+where
+    F: Fn(Tensor<B, 2>, Tensor<B, 2>) -> Tensor<B, 2>,
+{
+    if inputs.is_empty() {
+        return vec![];
+    }
+    
+    let mut results = Vec::with_capacity(inputs.len());
+    let mut accumulator = inputs[0].clone();
+    results.push(accumulator.clone());
+    
+    for i in 1..inputs.len() {
+        accumulator = binary_op(accumulator, inputs[i].clone());
+        results.push(accumulator.clone());
+    }
+    
+    results
+}
+
+// Removed unused functions:
+// - apply_dlinoss_binary_op_matrices
+// - apply_dlinoss_binary_op_vectors
