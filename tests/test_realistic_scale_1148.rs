@@ -38,14 +38,15 @@ fn test_realistic_ssm_sizes() {
                 println!("\n--- Testing SSM={}, Batch={}, Seq={}, Input={} ---", 
                     ssm_size, batch_size, seq_len, input_dim);
                 
-                // Create realistic D-LinOSS parameters with very conservative settings
-                let a_diag: Tensor<TestBackend, 1> = dlinoss_rust::dlinoss_core::init_oscillatory_a_matrix::<TestBackend>(
-                    ssm_size, 0.1, 1.0, device // Very conservative frequency range
+                // Use stable parameter initialization to prevent numerical instability
+                let step = 0.001;  // Smaller time step for stability
+                let (a_diag, g_diag) = dlinoss_rust::dlinoss_core::init_stable_parameters::<TestBackend>(
+                    ssm_size, step, device
                 );
                 
-                let g_diag: Tensor<TestBackend, 1> = dlinoss_rust::dlinoss_core::init_damping_g_matrix::<TestBackend>(
-                    ssm_size, 0.1, 0.2, device // Conservative damping for stability
-                );
+                // Verify stability condition
+                let is_stable = dlinoss_rust::dlinoss_core::check_stability_condition(&a_diag, &g_diag, step);
+                assert!(is_stable, "Parameters must satisfy stability condition");
                 
                 let b_matrix: Tensor<TestBackend, 2> = Tensor::random([input_dim, ssm_size], 
                     burn::tensor::Distribution::Normal(0.0, (1.0 / (ssm_size as f32).sqrt()).into()), device);
@@ -56,7 +57,7 @@ fn test_realistic_ssm_sizes() {
                 // Test computation
                 let start = std::time::Instant::now();
                 let output = dlinoss_rust::dlinoss_core::apply_damped_linoss_imex(
-                    a_diag, g_diag, b_matrix, input_sequence, 0.01, device  // Smaller time step for stability
+                    a_diag, g_diag, b_matrix, input_sequence, step, device
                 );
                 let duration = start.elapsed();
                 

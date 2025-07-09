@@ -480,9 +480,16 @@ pub fn apply_damped_linoss_parallel<B: Backend>(
         .matmul(b_matrix.clone())
         .reshape([batch_size, seq_len, ssm_size]);
     
-    // Initialize state transitions using IMEX discretization
-    let s = Tensor::ones([ssm_size], device) + g_diag.clone() * step;
-    let omega = a_diag.clone();
+    // Use the corrected IMEX discretization
+    let identity = Tensor::ones([ssm_size], device);
+    let s = identity.clone() + g_diag.clone() * step;  // S = I + Δt * G
+    let s_inv = identity.clone() / s.clone();           // S^(-1)
+    
+    // Compute IMEX transition matrices
+    let m11 = s_inv.clone();                                           // S^(-1)
+    let m12 = (s_inv.clone() * a_diag.clone()) * (-step);             // -Δt * S^(-1) * A
+    let m21 = s_inv.clone() * step;                                   // Δt * S^(-1)
+    let m22 = identity.clone() - (s_inv.clone() * a_diag.clone()) * (step * step); // I - Δt² * S^(-1) * A
     
     // Prepare elements for parallel scan
     let mut batch_scan_elements = Vec::new();
@@ -496,22 +503,21 @@ pub fn apply_damped_linoss_parallel<B: Backend>(
                 .squeeze::<2>(1)
                 .squeeze::<1>(0);  // [ssm_size]
             
-            // Compute transition coefficients
-            let f1_coeff = s.clone() * (omega.clone() * step).cos() - (omega.clone() * step).sin();
-            let f2_coeff = s.clone() * (omega.clone() * step).sin() + (omega.clone() * step).cos();
-            
-            // State transition matrix for this timestep
+            // State transition matrix for this timestep using IMEX
             let a_l: Tensor<B, 1> = Tensor::cat(vec![
-                f1_coeff.clone(),
-                f2_coeff.clone(),
-                -f2_coeff,
-                f1_coeff,
+                m11.clone(),
+                m12.clone(),
+                m21.clone(),
+                m22.clone(),
             ], 0);
             
-            // Input contribution
+            // Input contribution with corrected IMEX terms
+            let f1 = bu_l.clone() * s_inv.clone() * step;           // Δt * S^(-1) * B * u
+            let f2 = bu_l.clone() * s_inv.clone() * (step * step);  // Δt² * S^(-1) * B * u
+            
             let b_l: Tensor<B, 1> = Tensor::cat(vec![
-                bu_l.clone(),
-                Tensor::zeros_like(&bu_l),
+                f1,
+                f2,
             ], 0);
             
             sequence_elements.push((a_l, b_l));
@@ -534,12 +540,12 @@ pub fn apply_damped_linoss_parallel<B: Backend>(
     
     for (batch_idx, batch_result) in batch_results.iter().enumerate() {
         for (seq_idx, (_, state_vec)) in batch_result.iter().enumerate() {
-            // Extract the real parts of the complex state (first half of state_vec)
-            let real_state = state_vec.clone().slice([0..ssm_size]);
+            // Extract the position component (second half of state_vec)
+            let position_state = state_vec.clone().slice([ssm_size..2*ssm_size]);
             
             // Assign to output tensor
             output_tensor = output_tensor.slice_assign([batch_idx..batch_idx+1, seq_idx..seq_idx+1, 0..ssm_size], 
-                real_state.unsqueeze::<2>().unsqueeze::<3>());
+                position_state.unsqueeze::<2>().unsqueeze::<3>());
         }
     }
     
