@@ -9,6 +9,9 @@ pub mod dlinoss_core;
 // TRUE parallel scan implementation (not sequential!)
 pub mod parallel_scan_1150;
 
+// REAL O(log n) parallel scan - NO SEQUENTIAL FALLBACKS!
+pub mod parallel_scan_jul0915;
+
 // REAL GPU verification (not just device info!)
 pub mod gpu_verification_1140;
 
