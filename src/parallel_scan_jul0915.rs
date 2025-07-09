@@ -461,3 +461,87 @@ mod tests {
         println!("\n🎉 LARGE-SCALE PARALLEL SCAN COMPLETED!");
     }
 }
+
+/// TRUE D-LinOSS with PARALLEL SCAN implementation
+/// This replaces the sequential for-loop with actual parallel scan
+pub fn apply_damped_linoss_parallel<B: Backend>(
+    a_diag: Tensor<B, 1>,      // Diagonal of A matrix (oscillatory frequencies)
+    g_diag: Tensor<B, 1>,      // Diagonal of G matrix (damping coefficients)
+    b_matrix: Tensor<B, 2>,    // Input projection matrix B
+    input_sequence: Tensor<B, 3>,  // Input sequence [batch, seq_len, input_dim]
+    step: f32,                  // Time step Δt
+    device: &B::Device,
+) -> Tensor<B, 3> {  // Output [batch, seq_len, ssm_size]
+    let [batch_size, seq_len, input_dim] = input_sequence.dims();
+    let ssm_size = a_diag.dims()[0];
+    
+    // Project inputs through B matrix: [batch, seq_len, ssm_size]
+    let bu_elements = input_sequence.reshape([batch_size * seq_len, input_dim])
+        .matmul(b_matrix.clone())
+        .reshape([batch_size, seq_len, ssm_size]);
+    
+    // Initialize state transitions using IMEX discretization
+    let s = Tensor::ones([ssm_size], device) + g_diag.clone() * step;
+    let omega = a_diag.clone();
+    
+    // Prepare elements for parallel scan
+    let mut batch_scan_elements = Vec::new();
+    
+    for batch_idx in 0..batch_size {
+        let mut sequence_elements = Vec::new();
+        
+        for l in 0..seq_len {
+            // Extract slice for current timestep
+            let bu_l: Tensor<B, 1> = bu_elements.clone().slice([batch_idx..batch_idx+1, l..l+1, 0..ssm_size])
+                .squeeze::<2>(1)
+                .squeeze::<1>(0);  // [ssm_size]
+            
+            // Compute transition coefficients
+            let f1_coeff = s.clone() * (omega.clone() * step).cos() - (omega.clone() * step).sin();
+            let f2_coeff = s.clone() * (omega.clone() * step).sin() + (omega.clone() * step).cos();
+            
+            // State transition matrix for this timestep
+            let a_l: Tensor<B, 1> = Tensor::cat(vec![
+                f1_coeff.clone(),
+                f2_coeff.clone(),
+                -f2_coeff,
+                f1_coeff,
+            ], 0);
+            
+            // Input contribution
+            let b_l: Tensor<B, 1> = Tensor::cat(vec![
+                bu_l.clone(),
+                Tensor::zeros_like(&bu_l),
+            ], 0);
+            
+            sequence_elements.push((a_l, b_l));
+        }
+        
+        batch_scan_elements.push(sequence_elements);
+    }
+    
+    // Apply parallel scan to each batch
+    let mut batch_results = Vec::new();
+    
+    for batch_elements in batch_scan_elements {
+        // Use true O(log n) parallel scan
+        let scan_results = gpu_parallel_scan(batch_elements, crate::dlinoss_core::binary_operator);
+        batch_results.push(scan_results);
+    }
+    
+    // Convert results back to output tensor
+    let mut output_tensor = Tensor::zeros([batch_size, seq_len, ssm_size], device);
+    
+    for (batch_idx, batch_result) in batch_results.iter().enumerate() {
+        for (seq_idx, (_, state_vec)) in batch_result.iter().enumerate() {
+            // Extract the real parts of the complex state (first half of state_vec)
+            let real_state = state_vec.clone().slice([0..ssm_size]);
+            
+            // Assign to output tensor
+            output_tensor = output_tensor.slice_assign([batch_idx..batch_idx+1, seq_idx..seq_idx+1, 0..ssm_size], 
+                real_state.unsqueeze::<2>().unsqueeze::<3>());
+        }
+    }
+    
+    output_tensor
+}
