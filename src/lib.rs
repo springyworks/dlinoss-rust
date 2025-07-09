@@ -1,13 +1,16 @@
 //! D-LinOSS: Damped Linear Oscillatory State-Space Layers and Blocks
 
 // Custom Burn extensions - functionality missing from Burn
-pub mod burnadd;
+// pub mod burnadd;
 
 // Core mathematical D-LinOSS implementation following arXiv:2505.12171
 pub mod dlinoss_core;
 
-#[cfg(test)]
-pub mod test_dlinoss_core;
+// TRUE parallel scan implementation (not sequential!)
+pub mod parallel_scan_1150;
+
+// REAL GPU verification (not just device info!)
+pub mod gpu_verification_1140;
 
 // Layer and block implementations using the corrected core
 pub mod dlinoss_layer;

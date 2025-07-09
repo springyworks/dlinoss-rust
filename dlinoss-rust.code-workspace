@@ -4,12 +4,6 @@
 			"path": "."
 		},
 		{
-			"path": "../LinossRust"
-		},
-		{
-			"path": "../morseRust"
-		},
-		{
 			"path": "../../from_github/damped-linoss"
 		},
 		{

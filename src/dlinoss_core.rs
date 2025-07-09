@@ -104,7 +104,7 @@ pub fn apply_damped_linoss_imex<B: Backend>(
     
     // Project inputs through B matrix: [batch, seq_len, ssm_size]
     let bu_elements = input_sequence.reshape([batch_size * seq_len, input_dim])
-        .matmul(b_matrix.clone().transpose())
+        .matmul(b_matrix.clone())
         .reshape([batch_size, seq_len, ssm_size]);
     
     // Initialize state transitions using IMEX discretization

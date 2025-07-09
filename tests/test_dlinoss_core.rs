@@ -1,6 +1,6 @@
 use burn::tensor::Tensor;
 use burn::backend::wgpu::{Wgpu, WgpuDevice};
-use crate::dlinoss_core::apply_damped_linoss_imex;
+use dlinoss_rust::dlinoss_core::apply_damped_linoss_imex;
 
 type TestBackend = Wgpu;
 
